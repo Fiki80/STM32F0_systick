@@ -18,11 +18,14 @@ void RCC_Init(void)
 	// enable HSE
 	RCC->CR |= RCC_CR_HSEON | (RCC->CR & ~RCC_CR_HSEBYP); 
 	while ((RCC->CR & RCC_CR_HSERDY) == 0);
-
+	
 	// enable PLL
 	RCC->CFGR |= (0x4U << 18) | (0x1U << 16);
 	RCC->CR |= (0x1U << 24);	// PLLON
 	while ((RCC->CR & RCC_CR_PLLRDY) == 0);
+
+	// set wait state and enable prefetch buffer
+	FLASH->ACR |= (FLASH_ACR_PRFTBE | FLASH_ACR_LATENCY);
 
 	// switch clock
 	RCC->CFGR |= RCC_CFGR_SW_PLL;
