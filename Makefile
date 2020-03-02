@@ -9,17 +9,17 @@ OBJCOPY = $(TOOL)-objcopy
 OBJDUMP = $(TOOL)-objdump
 SIZE = $(TOOL)-size
 
-CFLAGS  = -Wall -g -std=gnu99 -Os -nostdlib
+CFLAGS  = -Wall -g -std=gnu99 -Os -nostdlib -lgcc
 CFLAGS += -mcpu=$(MCU_SPEC) -mthumb
 CFLAGS += -ffunction-sections -fdata-sections
 CFLAGS += -Wl,-Map=$(TARGET).map
 CFLAGS += -D$(MCU_DEF)
 
-LDFLAGS  = -nostdlib -ffreestanding
+LDFLAGS  = -nostdlib -ffreestanding -lgcc
 LDFLAGS += -mcpu=$(MCU_SPEC) -mthumb
 
 AS_SRC  = ./device/startup_stm32f030x6.s
-C_SRC += ./src/main.c ./src/system_stm32f0xx.c
+C_SRC += ./src/main.c ./src/system_stm32f0xx.c ./src/tinyprintf.c
 
 LSCRIPT_INC = ./device/ld
 INCLUDE = -I./inc

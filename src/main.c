@@ -1,15 +1,18 @@
 /**
  * Main program.
  */
-#include "stm32f0xx.h"
 #include <stdint.h>
+#include "stm32f0xx.h"
+#include "tinyprintf.h"
 
 #define LED (4)
 
 volatile uint32_t msTick = 0;
 
+
 void SysTick_Init(void)
 {
+	SystemCoreClockUpdate();
 	SysTick_Config(SystemCoreClock/1000);	// interrupt every 1ms
 }
 
@@ -44,23 +47,35 @@ void GPIO_Init(void)
 void USART1_Init(void)
 {
 	RCC->AHBENR |= RCC_AHBENR_GPIOAEN;		// enable clock for GPIOA
-	GPIOA->MODER |= (0x2U << 4);			// PA2 alt. out push-pull
+	GPIOA->MODER |= (0x2U << 18);			// PA9 alt.
+	GPIOA->MODER |= (0x2U << 20);			// PA10 alt.
+
+	// set alternate function on pins PA9, PA10
+	GPIOA->AFR[1] |= (0x00000110);
 
 	RCC->APB2ENR |= RCC_APB2ENR_USART1EN;	// enable clock for USART1
-	USART1->BRR = 48000000L/115200L;		// set baudrate
+	USART1->BRR = SystemCoreClock/115200;	// set baudrate
 	
-	USART1->CR1 |= USART_CR1_TE;			// enable transmitter
-	USART1->CR1 |= USART_CR1_UE;			// enable USART
+	USART1->CR1 |= (USART_CR1_TE | USART_CR1_UE);			// enable transmitter
+	USART1->CR1 |= USART_CR1_UE;							// enable USART
 }
 
-uint8_t sendChar(uint8_t ch)
+void _putc(void *p, char c)
 {
 	while (!(USART1->ISR & USART_ISR_TXE));
-	USART1->TDR = ch;
-	return (ch);
+	USART1->TDR = c;
+
+	if (c == '\n')
+	{
+		while (!(USART1->ISR & USART_ISR_TXE));
+		USART1->TDR = '\r';
+
+	}
 }
 
 int main(void) {
+
+	init_printf(NULL, _putc);
 
 	RCC_Init();
 	SysTick_Init();
@@ -82,6 +97,7 @@ void SysTick_Handler(void)
 	{
 		msTick = 0;
 		GPIOA->ODR ^= (0x1U << LED);
+		printf("%s%i%c", "Core clock: ", SystemCoreClock, '\n');
 	}
 }
 
